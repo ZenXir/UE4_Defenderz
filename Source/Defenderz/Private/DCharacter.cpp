@@ -1,9 +1,11 @@
 #include "DCharacter.h"
 
-#include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/BoxComponent.h"
+#include "Camera/CameraComponent.h"
+#include "DWeapon.h"
 
 ADCharacter::ADCharacter()
 {
@@ -23,12 +25,32 @@ ADCharacter::ADCharacter()
 	this->bAttacking = false;
 
 	this->LastAttackTime = 0.f;
-	this->TimeBetweenAttacks = .5f;
+	this->TimeBetweenAttacks = 1.f;
+
+	this->LeftHandSocket = "hand_lSocket";
+	this->RightHandSocket = "hand_rSocket";
 }
 
 void ADCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FActorSpawnParameters spawnParameters;
+	spawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	this->RightHandWep = GetWorld()->SpawnActor<ADWeapon>(WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, spawnParameters);
+	if (RightHandWep)
+	{
+		this->RightHandWep->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, RightHandSocket);
+		this->RightHandWep->SetOwner(this);
+	}
+
+	this->LeftHandWep = GetWorld()->SpawnActor<ADWeapon>(WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, spawnParameters);
+	if (LeftHandWep)
+	{
+		this->LeftHandWep->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, LeftHandSocket);
+		this->LeftHandWep->SetOwner(this);
+	}
 }
 
 void ADCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -39,8 +61,6 @@ void ADCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("MoveRight", this, &ADCharacter::MoveRight);
 
 	PlayerInputComponent->BindAxis("Turn", this, &ADCharacter::AddControllerYawInput);
-
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ADCharacter::OnJump);
 
 	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ADCharacter::StartAttacking);
 	PlayerInputComponent->BindAction("Attack", IE_Released, this, &ADCharacter::StopAttacking);
@@ -54,11 +74,6 @@ void ADCharacter::MoveForward(float delta)
 void ADCharacter::MoveRight(float delta)
 {
 	AddMovementInput(CameraComponent->GetRightVector(), delta);
-}
-
-void ADCharacter::OnJump()
-{
-	Jump();
 }
 
 void ADCharacter::StartAttacking()
@@ -75,7 +90,9 @@ void ADCharacter::StopAttacking()
 {
 	GetWorldTimerManager().ClearTimer(TimerHandle_Attack);
 
-	bAttacking = false;
+	bAttacking = false; 
+
+	ComboAttackCounter = 0;
 }
 
 void ADCharacter::Attack()
@@ -84,16 +101,8 @@ void ADCharacter::Attack()
 
 	UE_LOG(LogTemp, Display, TEXT("Attack"));
 
-	UAnimInstance* attackAnimationInstance = GetMesh()->GetAnimInstance();
-	UAnimMontage* attackAnimation = ComboAttackAnimations[ComboAttackCounter];
-
-	if (attackAnimationInstance && attackAnimation)
+	if (++ComboAttackCounter > 5)
 	{
-		attackAnimationInstance->Montage_Play(attackAnimation);
-
-		if (++ComboAttackCounter >= ComboAttackAnimations.Num())
-		{
-			ComboAttackCounter = 0;
-		}
+		ComboAttackCounter = 0;
 	}
 }

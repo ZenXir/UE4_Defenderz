@@ -7,6 +7,7 @@
 class UCameraComponent;
 class USpringArmComponent;
 class UBoxComponent;
+class ADWeapon;
 
 UCLASS()
 class DEFENDERZ_API ADCharacter : public ACharacter
@@ -41,6 +42,21 @@ protected:
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay")
 	//UBoxComponent* AttackCollider;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay")
+	TSubclassOf<ADWeapon> WeaponClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay")
+	ADWeapon* RightHandWep;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay")
+	ADWeapon* LeftHandWep;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Socket")
+	FName RightHandSocket;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Socket")
+	FName LeftHandSocket;
+
 public:	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -49,8 +65,6 @@ protected:
 
 	void MoveForward(float delta);
 	void MoveRight(float delta);
-
-	void OnJump();
 
 	void StartAttacking();
 	void StopAttacking();

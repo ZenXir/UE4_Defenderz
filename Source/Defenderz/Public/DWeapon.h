@@ -4,6 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "DWeapon.generated.h"
 
+class UStaticMeshComponent;
+
 UCLASS()
 class DEFENDERZ_API ADWeapon : public AActor
 {
@@ -13,8 +15,9 @@ public:
 	ADWeapon();
 
 protected:
-	virtual void BeginPlay() override;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	UStaticMeshComponent* StaticMeshComponent;
 
-public:	
-	virtual void Tick(float DeltaTime) override;
+protected:
+	virtual void BeginPlay() override;
 };
